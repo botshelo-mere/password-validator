@@ -1,0 +1,41 @@
+[project]
+name = "password-validator"
+version = "0.1.1"
+description = "A lightweight Python library and a CLI tool for validating passwords against customizable security rules."
+readme = "README.md"
+authors = [{name = "Botshelo Mere"}]
+license = {text = "MIT"}
+requires-python = ">=3.8"
+dependencies = ["pytest>=7.4.0"]  
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Development Status :: 3 - Alpha",
+]
+
+[project.scripts]
+validate-password = "password_validator.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/botshelo-mere"
+Repository = "https://github.com/botshelo-mere/password-validator"
+Issues = "https://github.com/botshelo-mere/password-validator/issues"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["password_validator*"]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = ["tests"]
