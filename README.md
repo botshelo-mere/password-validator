@@ -1,175 +1,148 @@
-# Password Validator v0.1.1
+# Password Validator
 
-A modular, rule-based password validation engine written in Python.  
-**v0.1.1 Update.** Project now with `uv` to provide an isolated, reproducible environment! 
-This ensures consistent behavior across machines without touching system Python.
+[![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg)](https://python.org)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE.md)
+[![Development Status](https://img.shields.io/badge/status-alpha-orange.svg)](https://github.com/botshelo-mere/password-validator)
 
----
-## Features (v0.1.1)
+A modular, rule-based password validation engine written in Python with both library and CLI interfaces.
 
-- Validate password length, uppercase, lowercase, digits, special characters 
-- Optional space restriction 
-- CLI interface using `getpass` (interactive input) 
-- Fully tested with `pytest` 
-- uv environment for isolated, reproducible Python setup
+## Overview
 
----
-## Project Structure
+The Password Validator provides customizable security rules for password validation, supporting:
+- Configurable length requirements
+- Character class validation (uppercase, lowercase, digits, special characters)
+- Optional space restrictions
+- Both programmatic API and command-line interface
+- Comprehensive test coverage
 
-```text
-password-validator/ 
-    | 
-    ├── src/.
-    |    └── password_validator/
-    |            ├── __init__.py        # Public API surface
-    |            ├── cli.py     # Optional interface
-    |            └── validator.py       # Core logic
-    ├── tests/
-    |    └── test_validator.py      # Test suite
-    ├── pyproject.toml   
-    ├── README.md
-    ├── LICENSE.md
-    └──.gitignore
-```
+## Quick Start
 
----
-## Installation and usage with `uv`
+### Prerequisites
 
-This project is designed to be run with `uv` - a fast Python package and project manager that keeps your system Python clean. 
+This project uses [uv](https://docs.astral.sh/uv/) for fast, isolated Python environment management.
 
-1. Install `uv` (if not already)
+### Installation
 
-Windows PowerShell
-``` PowerShell
-pip install uv
-```
-or see [official installation guide](https://docs.astra.sh/uv/getting-started/installation/)
+1. **Install uv** (if not already installed):
+   ```bash
+   # Via pip
+   pip install uv
+   
+   # Or follow the [official installation guide](https://docs.astral.sh/uv/getting-started/installation/)
+   ```
 
-Verify Installation:
-``` PowerShell
-uv --version
-```
+2. **Clone and setup the project**:
+   ```bash
+   git clone https://github.com/botshelo-mere/password-validator.git
+   cd password-validator
+   
+   # Create and sync the isolated environment
+   uv lock
+   uv sync
+   ```
 
-2. Clone and enter the repository:
+## Usage
 
-``` bash
-git clone https://github.com/botshelo-mere/password-validator.git
-cd password-validator
-```
+### Command Line Interface
 
-3. Setup the project environment
+Run the CLI tool interactively:
 
-Create and synchronize the isolated Python environment:
-``` bash
-uv lock # generates uv.lock file 
-uv sync # installs Python and dependencies in isolation
-```
-
-
-## Running the CLI
-
-There are two ways to run the CLI.  
-From the project root:
-
-#### Option 1 (Development / Debugging)
-``` bash
+```bash
+# Development mode
 uv run python -m password_validator.cli
-```
 
-#### Option 2 (Installed / User-Friendly):
-``` bash
+# Or after installation
 uv run validate-password
 ```
 
-You will be prompted to enter your password:
-- If the password is invalid, errors will be displayed
-- Repeat until a valid password is created
-- Or exit gracefully on Ctrl+C or input interruption
+The CLI will:
+- Display current password requirements
+- Prompt for password input securely (no echo)
+- Show validation errors or success message
+- Loop until valid password is entered or user exits (Ctrl+C)
 
-Use Option 1 while developing or debugging, and Option 2 once the environment is synced for general usage
+### Library Usage
 
+Use the validator in your Python code:
 
-## Running Tests
-
-All tests are located in the `tests/` folder and are written using `pytest`.  
-From the project root:
-
-#### Option 1 - Run all tests
-``` bash
-uv run pytest 
-```
-
-#### Option 2 - Run a specific test function
-```bash
-uv run pytest tests/test_validator.py::test_valid_password
-```
-
-**NOTE**: `uv run pytest` works because `pytest` is installed in the uv environment. 
-Do not run `python test_validator.py` direclty - the test framework will not discover functions.
-
-The test suite verifies:
-- Length boundaries (min and max)
-- Character class requirements
-- Space restrictions
-- Multiple simultaneous rule violations
-- Type validation
-- Empty input handling
-- Configuration toggles
-
-### Library Usage Example
-
-You can use the validator directly in Python code:
-``` python
+```python
 from password_validator import PasswordValidator
 
-validator = PasswordValidator(min_length=12, allow_spaces=True) 
-errors = validator.validate("My Password1!") 
-
-if not errors: 
-    print("Password is valid!") 
-else: 
-    print("Password invalid:", errors) 
-```
-
-#### Configuration Options
-
-```  python
+# Create validator with custom rules
 validator = PasswordValidator(
     min_length=12,
     max_length=32,
     special_chars="!@#$%",
     allow_spaces=True
-) 
+)
+
+# Validate password
+errors = validator.validate("My Password1!")
+
+if not errors:
+    print("Password is valid!")
+else:
+    print("Password invalid:", errors)
 ```
 
----
-## Development Notes
+### Configuration Options
 
-- Use uv run pytest to run all tests
-- CLI uses getpass — passwords are not echoed
-- Validator logic is pure library, no automatic printing
-- Ready for future features (v0.2.0: entropy detection)
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `min_length` | 16 | Minimum password length |
+| `max_length` | 20 | Maximum password length |
+| `special_chars` | "!@#$%^&*" | Allowed special characters |
+| `allow_spaces` | False | Whether spaces are permitted |
 
----
+## Project Structure
+
+```
+password-validator/
+├── src/
+│   └── password_validator/
+│       ├── __init__.py          # Public API
+│       ├── cli.py              # CLI interface
+│       └── validator.py        # Core validation logic
+├── tests/
+│   └── test_validator.py       # Test suite
+├── pyproject.toml              # Project configuration
+├── README.md                  
+├── LICENSE.md                  
+└── .gitignore                  
+```
+
+## Development
+
+### Running Tests
+
+```bash
+# Run all tests
+uv run pytest
+
+# Run specific test
+uv run pytest tests/test_validator.py::test_valid_password
+```
+
+### Test Coverage
+
+The test suite validates:
+- Length boundaries (min/max)
+- Character class requirements
+- Space restrictions
+- Multiple rule violations
+- Type validation and edge cases
+- Configuration toggles
+
 ## Version History
 
-Version 0.1.0
-- Initial public release
+- **v0.1.1** - Infrastructure improvements and documentation updates
+- **v0.1.0** - Initial public release
 
-Version 0.1.1
-- Development environment improvements and project documentation
-
-Current Version: Alpha (v0.1.1)
-
-This version improves infrastructure and packaging but does not change core validation logic.
-
----
 ## License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE.md) file for details.
 
----
-## Author 
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
 
-Botshelo Mere
+## Author
 
-Github: [https://github.com/botshelo-mere](https://github.com/botshelo-mere)
+**Botshelo Mere**  
+GitHub: [botshelo-mere](https://github.com/botshelo-mere)
