@@ -1,148 +1,304 @@
-# Password Validator
+# password-validator
 
-[![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg)](https://python.org)
+[![PyPI version](https://img.shields.io/badge/pypi-v0.2.0-blue.svg)](https://pypi.org/project/password-validator/)
+[![Python Version](https://img.shields.io/badge/python-3.9+-blue.svg)](https://python.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE.md)
-[![Development Status](https://img.shields.io/badge/status-alpha-orange.svg)](https://github.com/botshelo-mere/password-validator)
+[![Development Status](https://img.shields.io/badge/status-beta-yellow.svg)](https://github.com/botshelo-mere/password-validator)
+[![zxcvbn powered](https://img.shields.io/badge/strength-zxcvbn%20powered-purple.svg)](https://github.com/dwolfhub/zxcvbn-python)
 
-A modular, rule-based password validation engine written in Python with both library and CLI interfaces.
+A modern, policy-driven password validation library for Python — powered by
+[zxcvbn](https://github.com/dwolfhub/zxcvbn-python) for realistic strength
+estimation and fully configurable rule enforcement with a built-in CLI.
 
-## Overview
+---
 
-The Password Validator provides customizable security rules for password validation, supporting:
-- Configurable length requirements
-- Character class validation (uppercase, lowercase, digits, special characters)
-- Optional space restrictions
-- Both programmatic API and command-line interface
-- Comprehensive test coverage
+## Features
+
+- **Policy validation** — enforce length, character classes, spaces, and banned words
+- **Realistic strength scoring** — zxcvbn rates passwords 0–4 with human-readable labels
+- **Unified `evaluate()` API** — combines validation + strength in one call
+- **CLI interface** — interactive (colored) and non-interactive (JSON pipe) modes
+- **Resilient design** — defensive constructor, graceful zxcvbn exception handling
+- **Thread-safe** — safe to share a single `PasswordValidator` across threads
+- **Typed** — full `typing` annotations throughout
+
+---
+
+## Installation
+
+### Using uv (recommended)
+
+```bash
+git clone https://github.com/botshelo-mere/password-validator.git
+cd password-validator
+
+# Create virtual environment and install dependencies
+uv sync
+```
+
+### Using pip
+
+```bash
+pip install password-validator
+```
+
+### Dev / Testing
+
+```bash
+# Install with development extras (pytest, pytest-cov, pytest-benchmark, jsonschema)
+uv sync --extra dev
+# or
+pip install "password-validator[dev]"
+```
+
+---
 
 ## Quick Start
 
-### Prerequisites
-
-This project uses [uv](https://docs.astral.sh/uv/) for fast, isolated Python environment management.
-
-### Installation
-
-1. **Install uv** (if not already installed):
-   ```bash
-   # Via pip
-   pip install uv
-   
-   # Or follow the [official installation guide](https://docs.astral.sh/uv/getting-started/installation/)
-   ```
-
-2. **Clone and setup the project**:
-   ```bash
-   git clone https://github.com/botshelo-mere/password-validator.git
-   cd password-validator
-   
-   # Create and sync the isolated environment
-   uv lock
-   uv sync
-   ```
-
-## Usage
-
-### Command Line Interface
-
-Run the CLI tool interactively:
-
-```bash
-# Development mode
-uv run python -m password_validator.cli
-
-# Or after installation
-uv run validate-password
-```
-
-The CLI will:
-- Display current password requirements
-- Prompt for password input securely (no echo)
-- Show validation errors or success message
-- Loop until valid password is entered or user exits (Ctrl+C)
-
 ### Library Usage
-
-Use the validator in your Python code:
 
 ```python
 from password_validator import PasswordValidator
 
-# Create validator with custom rules
-validator = PasswordValidator(
-    min_length=12,
-    max_length=32,
-    special_chars="!@#$%",
-    allow_spaces=True
-)
+# Default policy: 12–64 chars, upper, lower, digit, special required
+validator = PasswordValidator()
 
-# Validate password
-errors = validator.validate("My Password1!")
+# --- validate() → (bool, list[str]) ---
+valid, errors = validator.validate("Str0ngP@ssw0rd!")
+print(valid)   # True
+print(errors)  # []
 
-if not errors:
-    print("Password is valid!")
-else:
-    print("Password invalid:", errors)
+valid, errors = validator.validate("weak")
+print(valid)   # False
+print(errors)  # ['Password must be at least 12 characters long', ...]
+
+# --- estimate_strength() → dict ---
+strength = validator.estimate_strength("Str0ngP@ssw0rd!")
+print(strength["score"])    # 3
+print(strength["label"])    # 'Strong'
+print(strength["feedback"]) # []
+
+# --- evaluate() — combines both in one call ---
+result = validator.evaluate("Str0ngP@ssw0rd!")
+# {
+#   "valid": True,
+#   "errors": [],
+#   "score": 3,
+#   "label": "Strong",
+#   "feedback": []
+# }
 ```
 
-### Configuration Options
+### Custom Policy
 
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `min_length` | 16 | Minimum password length |
-| `max_length` | 20 | Maximum password length |
-| `special_chars` | "!@#$%^&*" | Allowed special characters |
-| `allow_spaces` | False | Whether spaces are permitted |
+```python
+validator = PasswordValidator(
+    min_length=8,
+    max_length=32,
+    require_uppercase=True,
+    require_lowercase=True,
+    require_digit=True,
+    require_special=True,
+    special_chars="!@#$%",
+    allow_spaces=False,
+    banned_words=["password", "admin", "secret"],
+)
+
+valid, errors = validator.validate("Admin123!")
+# valid=False → "Contains a banned word"
+```
+
+---
+
+## Configuration Reference
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `min_length` | `int` | `12` | Minimum password length (must be ≥ 1) |
+| `max_length` | `int` | `64` | Maximum password length (must be ≥ `min_length`) |
+| `require_uppercase` | `bool` | `True` | Require at least one uppercase letter |
+| `require_lowercase` | `bool` | `True` | Require at least one lowercase letter |
+| `require_digit` | `bool` | `True` | Require at least one digit |
+| `require_special` | `bool` | `True` | Require at least one special character |
+| `special_chars` | `str` | `"!@#$%^&*"` | Set of accepted special characters |
+| `allow_spaces` | `bool` | `False` | Whether whitespace is permitted |
+| `banned_words` | `list[str] \| None` | `None` | Case-insensitive list of forbidden words |
+
+> `ValueError` is raised on construction if `min_length <= 0` or `max_length < min_length`.
+
+---
+
+## API Reference
+
+### `PasswordValidator.validate(pwd: str) → Tuple[bool, List[str]]`
+
+Runs all configured policy rules against the password.
+
+- Returns `(True, [])` if all rules pass.
+- Returns `(False, [<error messages>])` if any rule fails.
+- Raises `ValueError` if `pwd` is not a `str`.
+
+### `PasswordValidator.estimate_strength(pwd: str) → Dict[str, Any]`
+
+Uses zxcvbn to estimate password strength.
+
+- Passwords longer than 72 characters are truncated before scoring (zxcvbn limit).
+- Always returns a dictionary — never raises.
+
+| Key | Type | Description |
+|---|---|---|
+| `score` | `int` | 0 (Very Weak) → 4 (Very Strong) |
+| `label` | `str` | Human-readable label |
+| `feedback` | `list[str]` | Warnings and suggestions from zxcvbn |
+
+### `PasswordValidator.evaluate(pwd: str) → Dict[str, Any]`
+
+Combines `validate()` and `estimate_strength()` into a single result.
+
+| Key | Type | Description |
+|---|---|---|
+| `valid` | `bool` | Whether all policy rules passed |
+| `errors` | `list[str]` | Policy error messages |
+| `score` | `int` | zxcvbn score 0–4 |
+| `label` | `str` | Strength label |
+| `feedback` | `list[str]` | zxcvbn feedback |
+
+---
+
+## CLI Usage
+
+### Interactive Mode
+
+```bash
+uv run password-validator
+```
+
+```
+Password Validator v0.2.0 (zxcvbn powered)
+Type .exit() to quit
+
+Enter password: ········
+✓ Valid password
+
+Strength: Strong
+  • Use a longer keyboard pattern with more turns
+```
+
+- Type `.exit()` to quit.
+- Press `Ctrl+C` to interrupt.
+- Password input is hidden (no echo).
+
+### Non-Interactive / Pipe Mode
+
+Pipe a password directly — output is JSON, exit code is `0` for score ≥ 3, `1` otherwise:
+
+```bash
+echo "Str0ngP@ssw0rd!" | password-validator
+```
+
+```json
+{
+  "valid": true,
+  "errors": [],
+  "score": 3,
+  "label": "Strong",
+  "feedback": []
+}
+```
+
+Ideal for shell scripts and CI pipelines:
+
+```bash
+echo "$PASSWORD" | password-validator && echo "Password accepted" || echo "Password rejected"
+```
+
+---
 
 ## Project Structure
 
 ```
 password-validator/
+├── pyproject.toml                  # Project configuration
+├── .gitignore
+├── README.md
+├── LICENSE.md
 ├── src/
 │   └── password_validator/
-│       ├── __init__.py          # Public API
-│       ├── cli.py              # CLI interface
-│       └── validator.py        # Core validation logic
-├── tests/
-│   └── test_validator.py       # Test suite
-├── pyproject.toml              # Project configuration
-├── README.md                  
-├── LICENSE.md                  
-└── .gitignore                  
+│       ├── __init__.py             # Public API  (__version__, __all__)
+│       ├── validator.py            # Core validation + zxcvbn strength logic
+│       └── cli.py                  # CLI interface (colorama)
+└── tests/
+    ├── __init__.py
+    ├── test_validator.py           # Validator unit tests
+    ├── test_cli.py                 # CLI unit tests
+    └── test_performance_benchmarks.py  # pytest-benchmark performance tests
 ```
+
+---
 
 ## Development
 
 ### Running Tests
 
 ```bash
-# Run all tests
+# All tests
 uv run pytest
 
-# Run specific test
-uv run pytest tests/test_validator.py::test_valid_password
+# With coverage report
+uv run pytest --cov=password_validator --cov-report=term-missing
+
+# Verbose output
+uv run pytest -v
 ```
 
-### Test Coverage
+### Running Benchmarks
 
-The test suite validates:
-- Length boundaries (min/max)
-- Character class requirements
-- Space restrictions
-- Multiple rule violations
-- Type validation and edge cases
-- Configuration toggles
+```bash
+uv run pytest tests/test_performance_benchmarks.py --benchmark-only
+```
+
+### Code Coverage
+
+```bash
+uv run pytest --cov=password_validator --cov-branch --cov-report=html
+# Open htmlcov/index.html in your browser
+```
+
+---
+
+## Strength Score Labels
+
+| Score | Label | Meaning |
+|---|---|---|
+| 0 | Very Weak | Trivially crackable |
+| 1 | Weak | Easy to crack |
+| 2 | Moderate | Some resistance |
+| 3 | Strong | Good security |
+| 4 | Very Strong | Excellent security |
+
+Scoring is provided by [zxcvbn](https://github.com/dwolfhub/zxcvbn-python), which
+models real-world cracking strategies (dictionary attacks, keyboard patterns, etc.)
+rather than simple character-class rules.
+
+---
 
 ## Version History
 
-- **v0.1.1** - Infrastructure improvements and documentation updates
-- **v0.1.0** - Initial public release
+| Version | Changes |
+|---|---|
+| **v0.2.0** | Added zxcvbn strength estimation, `evaluate()` API, banned words, full type annotations, colorama CLI, pipe mode, comprehensive test suite |
+| **v0.1.1** | Infrastructure improvements, packaging fixes |
+| **v0.1.0** | Initial public release |
+
+---
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
+This project is licensed under the MIT License — see [LICENSE.md](LICENSE.md) for details.
+
+---
 
 ## Author
 
-**Botshelo Mere**  
+**Botshelo Mere**
 GitHub: [botshelo-mere](https://github.com/botshelo-mere)

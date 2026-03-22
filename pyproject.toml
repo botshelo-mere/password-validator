@@ -1,41 +1,66 @@
 [project]
 name = "password-validator"
-version = "0.1.1"
-description = "A lightweight Python library and a CLI tool for validating passwords against customizable security rules."
+version = "0.2.0"
+description = "A modern password validation library powered by zxcvbn with policy enforcement and CLI support."
 readme = "README.md"
-authors = [{name = "Botshelo Mere"}]
-license = {text = "MIT"}
-requires-python = ">=3.8"
-dependencies = ["pytest>=7.4.0"]  
+license = { text = "MIT" }
+authors = [{ name = "Botshelo Mere" }]
+requires-python = ">=3.9"
+
+dependencies = [
+    "zxcvbn>=4.4.28",
+    "colorama>=0.4.6"
+]
+
 classifiers = [
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
 ]
 
 [project.scripts]
-validate-password = "password_validator.cli:main"
+password-validator = "password_validator.cli:main"
+
+[build-system]
+requires = ["setuptools>=65", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "pytest-benchmark>=4.0",
+    "jsonschema>=4.0"
+]
 
 [project.urls]
-Homepage = "https://github.com/botshelo-mere"
+Homepage = "https://github.com/botshelo-mere/password-validator"
 Repository = "https://github.com/botshelo-mere/password-validator"
 Issues = "https://github.com/botshelo-mere/password-validator/issues"
 
-[build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+[tool.setuptools]
+package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["password_validator*"]
 
 [tool.pytest.ini_options]
-minversion = "6.0"
-addopts = "-ra -q"
+minversion = "7.0"
+addopts = "-ra -q --strict-markers"
 testpaths = ["tests"]
+markers = [
+    "benchmark: performance benchmarking tests"
+]
+
+[tool.coverage.run]
+branch = true
+source = ["password_validator"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true

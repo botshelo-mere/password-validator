@@ -1,47 +1,46 @@
 # Python
 __pycache__/
 *.py[cod]
-*$py.class
-*.so
-.Python
-
-<<<<<<< Updated upstream
-# Python version files
-.python-version
+*.pyo
+*.pyd
 
 # Virtual environments
 .venv/
 venv/
-ENV/
 env/
-
-=======
-# Virtual environments
-.venv/
-venv/
-ENV/
-env/
-
->>>>>>> Stashed changes
-# uv
-uv.lock
 
 # Distribution
-dist/
 build/
+dist/
 *.egg-info/
+
+# Testing & coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Benchmark outputs
+.benchmark/
+benchmark_results/
+*.bench
+
+# Python version files
+.python-version
+ 
+# Type checking
+.mypy_cache/
 
 # IDE
 .vscode/
 .idea/
-*.swp
-*.swo
-
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
 
 # OS
 .DS_Store
 Thumbs.db
+
+# Logs
+*.log
+
+# uv
+uv.lock
