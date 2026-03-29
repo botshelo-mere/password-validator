@@ -1,5 +1,5 @@
 import pytest
-from password_validator import PasswordValidator
+from fortifypass import PasswordValidator
 
 
 @pytest.fixture

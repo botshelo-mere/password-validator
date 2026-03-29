@@ -1,56 +1,144 @@
-# FortifyPass Validator
+# FortifyPass - Real-World Password Security for Developers
 
-[![PyPI version](https://img.shields.io/badge/pypi-v0.2.0-blue.svg)](https://pypi.org/project/fortifypass-validator/0.2.0/)
 [![Python Version](https://img.shields.io/badge/python-3.9+-blue.svg)](https://python.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE.md)
-[![Development Status](https://img.shields.io/badge/status-beta-yellow.svg)](https://github.com/botshelo-mere/password-validator)
+[![Development Status](https://img.shields.io/badge/status-beta-yellow.svg)](https://github.com/botshelo-mere/fortifypass)
 [![zxcvbn powered](https://img.shields.io/badge/strength-zxcvbn%20powered-purple.svg)](https://github.com/dwolfhub/zxcvbn-python)
 
-A modern, policy-driven password validation library for Python — powered by
-[zxcvbn](https://github.com/dwolfhub/zxcvbn-python) for realistic strength
-estimation and fully configurable rule enforcement with a built-in CLI.
+> Every day, companies get breached because someone picked `123456` or `password`. Users think complexity is optional. Developers hope nobody notices. Security teams cry. FortifyPass guarantees your users pick passwords that actually protect them - real-world strong, actinable, and verifiable
+
+## Why Everyone will Agree
+
+- **Weak passwords are everywhere** - your users do it, your friends do it, your systems get hacked.
+- **Length or character checks don't cut it** - hackers exploit patterns, common words, and sequences.
+- **Feedback is terrible in almost every validator** - users ignore it, reuse passwords, and risk breaches skyrocket.
+
+Your system is only as secure as the weakest password. FortifyPass fixes that.
+
+## Why You'll Want This
+
+FortifyPass doesn't just validate - it forces strong passwords and explains why:
+- Real-world strength scoring powered by `zxcvbn`
+- **Policy enforcement**: uppercase, lowercase, digits, special, characters, banned words
+- **Actionable feedback**: your users actually learn to make secure passwords
+- **Plug-and-Play**: works in Python, CLI, scripts, and future APIs
 
 ---
 
-## Features
+## Quick Demo
 
-- **Policy validation** — enforce length, character classes, spaces, and banned words
-- **Realistic strength scoring** — zxcvbn rates passwords 0–4 with human-readable labels
-- **Unified `evaluate()` API** — combines validation + strength in one call
-- **CLI interface** — interactive (colored) and non-interactive (JSON pipe) modes
-- **Resilient design** — defensive constructor, graceful zxcvbn exception handling
-- **Thread-safe** — safe to share a single `PasswordValidator` across threads
-- **Typed** — full `typing` annotations throughout
+``` bash
+fortifypass
+```
 
----
+``` bash
+FortifyPass version 0.2.1      
+Type .exit() to quit      
+      
+Enter password: ··············      
+✗ Does not meet policy requirements      
+  • Policy requirement: add at least one special character      
+✗ Too weak against common attacks      
+      
+Score: 0/4      
+Strength: Very Weak      
+      
+Feedback:      
+  • Sequences like "abc" or "6543" are easy to guess.      
+  • Avoid sequences.      
+      
+------------------------------------------------------------       
+      
+Enter password: ·················      
+✗ Too weak against common attacks      
+      
+Score: 2/4      
+Strength: Moderate      
+      
+Feedback:      
+  • This is similar to a commonly used password.      
+  • Add another word or two. Uncommon words are better.      
+  • Capitalization doesn't help very much.      
+  • Predictable substitutions like '@' instead of 'a' don't help very much.      
+      
+------------------------------------------------------------      
+      
+Enter password: ······························      
+✓ Strong against common attacks      
+      
+Score: 4/4      
+Strength: Very Strong      
+      
+------------------------------------------------------------
+      
+Enter password: ·······     
+Goodbye.
+```
+
+### Non-Interactive / Pipe mode
+
+``` bash
+echo "Str0ngP@ssw0rd!" | fortifypass
+```
+
+``` json
+{
+  "valid": true,
+  "policy_passed": true,
+  "strength_passed": true,
+  "errors": [],
+  "score": 4,
+  "label": "Very Strong",
+  "feedback": []
+}
+```
 
 ## Installation
 
-### Using uv (recommended)
+### Using pip (standard)
 
-```bash
-git clone https://github.com/botshelo-mere/password-validator.git
-cd password-validator
+``` bash
+pip install fortifypass
+```
 
-# Create virtual environment and install dependencies
+### Using uv (fast alternative)
+
+Install `uv` (if not already) or see [official installation guides](https://docs.astral.sh/uv/getting-started/installation/)
+```
+pip install uv
+```
+
+``` bash
+uv add fortifypass
+```
+
+if you're working in a project:
+``` bash
 uv sync
 ```
 
-### Using pip
+### From Source
 
 ```bash
-pip install fortifypass-validator
+git clone https://github.com/botshelo-mere/fortifypass.git
+cd fortifypass
+
+# Using pip
+pip install .
+
+# Using uv
+uv sync
 ```
 
 ### Dev / Testing
 
 ```bash
-# Install with development extras (pytest, pytest-cov, pytest-benchmark, jsonschema)
-uv sync --extra dev
-# or
-pip install "password-validator[dev]"
-```
+# Using pip
+pip install "fortifypass[dev]"
 
+# Using uv
+uv sync --extra dev
+```
 ---
 
 ## Quick Start
@@ -58,7 +146,7 @@ pip install "password-validator[dev]"
 ### Library Usage
 
 ```python
-from password_validator import PasswordValidator
+from fortifypass import PasswordValidator
 
 # Default policy: 12–64 chars, upper, lower, digit, special required
 validator = PasswordValidator()
@@ -101,7 +189,7 @@ validator = PasswordValidator(
     require_special=True,
     special_chars="!@#$%",
     allow_spaces=False,
-    banned_words=["password", "admin", "secret"],
+    banned_words=["password", "admin", "secret"]
 )
 
 valid, errors = validator.validate("Admin123!")
@@ -114,17 +202,19 @@ valid, errors = validator.validate("Admin123!")
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
-| `min_length` | `int` | `12` | Minimum password length (must be >= 12) |
-| `max_length` | `int` | `64` | Maximum password length (must be <= `min_length`) |
+| `min_length` | `int` | `12` | Minimum password length |
+| `max_length` | `int` | `64` | Maximum password length |
 | `require_uppercase` | `bool` | `True` | Require at least one uppercase letter |
 | `require_lowercase` | `bool` | `True` | Require at least one lowercase letter |
 | `require_digit` | `bool` | `True` | Require at least one digit |
 | `require_special` | `bool` | `True` | Require at least one special character |
-| `special_chars` | `str` | `"!@#$%^&*"` | Set of accepted special characters |
+| `special_chars` | `str` | `"!@#$%^&*"` | Set of allowed special characters |
 | `allow_spaces` | `bool` | `False` | Whether whitespace is permitted |
 | `banned_words` | `list[str] \| None` | `None` | Case-insensitive list of forbidden words |
+| `min_score` | `int` | `0` | Minimum zxcvbn score (0-4) |
 
-> `ValueError` is raised on construction if `min_length <= 0` or `max_length < min_length`.
+> `ValueError` is raised on construction if `min_length <= 0` or `max_length < min_length`.  
+> `ValueError` is raised on construction if `min_score < 0` or not `0 <= min_score <= 4`.
 
 ---
 
@@ -158,6 +248,8 @@ Combines `validate()` and `estimate_strength()` into a single result.
 | Key | Type | Description |
 |---|---|---|
 | `valid` | `bool` | Whether all policy rules passed |
+| `policy_passed` | `bool` | Policy Compliance |
+| `strength_passed` | `bool` | `score` >= `min_core` |
 | `errors` | `list[str]` | Policy error messages |
 | `score` | `int` | zxcvbn score 0–4 |
 | `label` | `str` | Strength label |
@@ -168,101 +260,32 @@ Combines `validate()` and `estimate_strength()` into a single result.
 ## CLI Usage
 
 ### Interactive Mode
+``` bash
+fortifypass 
 
-```bash
-uv run password-validator
+# Or use uv
+uv run fortifypass
 ```
 
-```
-FortifyPass-Validator v0.2.0 (zxcvbn powered)
-Type .exit() to quit
-
-Enter password: ········
-✓ Valid password
-
-Strength: Strong
-  • Use a longer keyboard pattern with more turns
-```
-
+- Password input is hidden (no echo).
 - Type `.exit()` to quit.
 - Press `Ctrl+C` to interrupt.
-- Password input is hidden (no echo).
 
 ### Non-Interactive / Pipe Mode
 
 Pipe a password directly — output is JSON, exit code is `0` for score ≥ 3, `1` otherwise:
 
 ```bash
-echo "Str0ngP@ssw0rd!" | password-validator
-```
-
-```json
-{
-  "valid": true,
-  "errors": [],
-  "score": 3,
-  "label": "Strong",
-  "feedback": []
-}
+echo "Str0ngP@ssw0rd!" | fortifypass
 ```
 
 Ideal for shell scripts and CI pipelines:
 
 ```bash
-echo "$PASSWORD" | password-validator && echo "Password accepted" || echo "Password rejected"
+echo "$PASSWORD" | fortifypass && echo "Password accepted" || echo "Password rejected"
 ```
 
----
-
-## Project Structure
-
-```
-password-validator/
-├── pyproject.toml                  # Project configuration
-├── .gitignore
-├── README.md
-├── LICENSE.md
-├── src/
-│   └── password_validator/
-│       ├── __init__.py             # Public API  (__version__, __all__)
-│       ├── validator.py            # Core validation + zxcvbn strength logic
-│       └── cli.py                  # CLI interface (colorama)
-└── tests/
-    ├── __init__.py
-    ├── test_validator.py           # Validator unit tests
-    ├── test_cli.py                 # CLI unit tests
-    └── test_performance_benchmarks.py  # pytest-benchmark performance tests
-```
-
----
-
-## Development
-
-### Running Tests
-
-```bash
-# All tests
-uv run pytest
-
-# With coverage report
-uv run pytest --cov=password_validator --cov-report=term-missing
-
-# Verbose output
-uv run pytest -v
-```
-
-### Running Benchmarks
-
-```bash
-uv run pytest tests/test_performance_benchmarks.py --benchmark-only
-```
-
-### Code Coverage
-
-```bash
-uv run pytest --cov=password_validator --cov-branch --cov-report=html
-# Open htmlcov/index.html in your browser
-```
+> Exit code is 0 only if the password passes **both policy and strength requirements**
 
 ---
 
@@ -282,10 +305,46 @@ rather than simple character-class rules.
 
 ---
 
+## Development
+
+### Running Tests
+
+```bash
+# All tests
+uv run pytest
+
+# With coverage report
+uv run pytest --cov=fortifypass --cov-report=term-missing
+
+# Verbose output
+uv run pytest -v
+
+# Run a specific test function
+uv run pytest tests/test_validator.py::Testvalidate::test_validate_valid_password
+```
+
+### Running Benchmarks
+
+```bash
+uv run pytest tests/test_performance_benchmarks.py --benchmark-only
+```
+
+### Code Coverage
+
+```bash
+uv run pytest --cov=fortifypass --cov-branch --cov-report=html
+# Open htmlcov/index.html in your browser
+```
+
+> **NOTE**: `uv run pytest` works because `pytest` is installed in the uv environment. Do not run `python test_validator.py` direclty - the test framework will not discover functions.
+
+---
+
 ## Version History
 
 | Version | Changes |
 |---|---|
+| **v0.2.1** | Fixed password score display issue, improved CLI output formatting, enhanced feedback, internal improvements for stability |
 | **v0.2.0** | Added zxcvbn strength estimation, `evaluate()` API, banned words, full type annotations, colorama CLI, pipe mode, comprehensive test suite |
 | **v0.1.1** | Infrastructure improvements, packaging fixes |
 | **v0.1.0** | Initial public release |
@@ -294,11 +353,11 @@ rather than simple character-class rules.
 
 ## License
 
-This project is licensed under the MIT License — see [LICENSE.md](LICENSE.md) for details.
+This project is licensed under the MIT License — see [LICENSE.md](https://github.com/botshelo-mere/fortifypass/blob/main/LICENSE.md) for details.
 
 ---
 
 ## Author
 
-**Botshelo Mere**
+**Botshelo Mere**  
 GitHub: [botshelo-mere](https://github.com/botshelo-mere)

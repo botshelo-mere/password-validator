@@ -2,11 +2,11 @@ import pytest
 import time  
 import threading  
 from unittest.mock import patch  
-from password_validator import PasswordValidator 
-from password_validator.validator import zxcvbn  # for mocking  
+from fortifypass import PasswordValidator 
+from fortifypass.validator import zxcvbn  # for mocking  
 
-class TestPasswordValidator:  
-    """Comprehensive tests for PasswordValidator."""  
+class Testvalidate:  
+    """Comprehensive tests for validate."""  
 
     # ===== Initialization =====  
     def test_default_init(self):  
@@ -84,10 +84,10 @@ class TestPasswordValidator:
 
     def test_validate_max_length(self):  
         # Set min_length <= max_length to avoid ValueError  
-        v = PasswordValidator(min_length=1, max_length=8)  
-        valid, errors = v.validate("this is too long")  
-        assert valid is False  
-        assert any("max_length" in err.lower() or "exceed" in err.lower() for err in errors)  
+        v = PasswordValidator(min_length=1, max_length=8)
+        valid, errors = v.validate("this is too long")
+        assert valid is False
+        assert any("maximum" in err.lower() for err in errors)
 
     def test_validate_uppercase_required(self):  
         v = PasswordValidator(require_uppercase=True)  
@@ -171,7 +171,7 @@ class TestPasswordValidator:
 
     def test_estimate_strength_zxcvbn_exception(self):  
         """Gracefully handle zxcvbn throwing an exception."""  
-        with patch('password_validator.validator.zxcvbn', side_effect=Exception("zxcvbn crashed")):  
+        with patch('fortifypass.validator.zxcvbn', side_effect=Exception("zxcvbn crashed")):  
             v = PasswordValidator()  
             result = v.estimate_strength("any")  
             assert result["score"] == 0  
@@ -180,7 +180,7 @@ class TestPasswordValidator:
 
     def test_estimate_strength_malformed_zxcvbn_output(self):  
         """Handle incomplete zxcvbn response gracefully."""  
-        with patch('password_validator.validator.zxcvbn', return_value={"score": 2}):   
+        with patch('fortifypass.validator.zxcvbn', return_value={"score": 2}):   
             v = PasswordValidator()  
             result = v.estimate_strength("any")  
             assert "feedback" in result   
@@ -203,19 +203,19 @@ class TestPasswordValidator:
         assert any("digit" in err.lower() for err in result["errors"])  
 
     # ===== Edge Cases =====  
-    def test_edge_case_very_long_password(self):  
-        # Disable other requirements to focus on length  
-        v = PasswordValidator(  
-            min_length=1,  
-            max_length=100,  
-            require_uppercase=False,  
-            require_lowercase=False,  
-            require_digit=False,  
-            require_special=False  
-        )  
-        long_pwd = "A" * 99 + "1"  # exactly 100 chars, contains digit  
-        valid, errors = v.validate(long_pwd)  
-        assert valid is True  
+    def test_edge_case_very_long_password(self):
+        v = PasswordValidator(
+            min_length=1,
+            max_length=100,
+            require_uppercase=False,
+            require_lowercase=True,   
+            require_digit=False,
+            require_special=False
+        )
+        
+        long_pwd = "A" * 98 + "a1"
+        valid, errors = v.validate(long_pwd)
+        assert valid is True
         assert errors == []  
 
     def test_edge_case_password_exactly_min_length(self):  
@@ -229,7 +229,7 @@ class TestPasswordValidator:
         v = PasswordValidator(min_length=1, max_length=10)  
         valid, errors = v.validate("this is too long")  
         assert valid is False  
-        assert any("exceed" in err.lower() for err in errors)  
+        assert any("maximum" in err.lower() for err in errors)  
 
     def test_edge_case_banned_word_embedded(self):  
         v = PasswordValidator(banned_words=["secret"])  

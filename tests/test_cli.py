@@ -4,7 +4,7 @@ import jsonschema
 import pytest
 from io import StringIO
 from unittest.mock import patch
-from password_validator.cli import main
+from fortifypass.cli import main
 
 # Define the expected JSON schema for non‑interactive output
 CLI_OUTPUT_SCHEMA = {
@@ -77,7 +77,8 @@ class TestCLI:
         main()  # Should not raise SystemExit
 
         out, _ = capsys.readouterr()
-        assert "✓ Valid password" in out
+        #output: "✓ Strong against common attacks"
+        assert "✓ Strong against common attacks" in out
         assert "Strength:" in out
         assert "Goodbye." in out
 
@@ -92,7 +93,7 @@ class TestCLI:
         main()
 
         out, _ = capsys.readouterr()
-        assert "✗ Invalid password" in out
+        assert "✗ Does not meet policy requirements" in out
         assert any("min_length" in line.lower() or "at least" in line.lower() for line in out.splitlines())
         assert "Goodbye." in out
 
@@ -107,8 +108,8 @@ class TestCLI:
         main()
 
         out, _ = capsys.readouterr()
-        assert "✗ Invalid password" in out
-        assert "✓ Valid password" in out
+        assert "✗ Does not meet policy requirements" in out   # first attempt
+        assert "✓ Strong against common attacks" in out       # second attempt
         assert "Goodbye." in out
 
     def test_interactive_exit_command(self, capsys, monkeypatch):
@@ -149,14 +150,14 @@ class TestCLI:
         main()
 
         out, _ = capsys.readouterr()
-        assert "✗ Invalid password" in out
+        assert "✗ Does not meet policy requirements" in out
         assert any("empty" in line.lower() for line in out.splitlines())
         assert "Goodbye." in out
 
     def test_interactive_long_password(self, capsys, monkeypatch):
-        # Create a password that satisfies all default requirements and is within max_length
-        long_pwd = "A" * 60 + "a1!"   # length = 63 (<= 64)
-        inputs = iter([long_pwd, ".exit()"])
+        # Use a password that is both policy-compliant AND strong
+        strong_pwd = "CorrectHorseBatteryStap13!"  # 26 chars, strong
+        inputs = iter([strong_pwd, ".exit()"])
         def mock_getpass(prompt):
             print(prompt, end='')
             return next(inputs)
@@ -166,7 +167,7 @@ class TestCLI:
         main()
 
         out, _ = capsys.readouterr()
-        assert "✓ Valid password" in out
+        assert "✓ Strong against common attacks" in out
         assert "Strength:" in out
 
     # ===== Real‑world usage =====
@@ -181,5 +182,5 @@ class TestCLI:
         main()
 
         out, _ = capsys.readouterr()
-        assert "✗ Invalid password" in out
+        assert "✗ Does not meet policy requirements" in out
         assert any("uppercase" in line.lower() for line in out.splitlines())

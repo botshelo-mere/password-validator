@@ -2,13 +2,13 @@ import sys
 import json
 import getpass
 from colorama import init, Fore, Style
-from password_validator.validator import PasswordValidator, MAX_ZXCVBN_LEN
+from fortifypass.validator import PasswordValidator
 
 # Initialize Colorama
 init(autoreset=True)
 
 def main():
-    validator = PasswordValidator()
+    validator = PasswordValidator.secure()
 
     # Handle piped input (non-interactive)
     if not sys.stdin.isatty():
@@ -16,10 +16,10 @@ def main():
         
         result = validator.evaluate(pwd)
         print(json.dumps(result, indent=2))
-        sys.exit(0 if result["score"] >= 3 else 1)
+        sys.exit(0 if result["valid"] else 1)
 
     # Interactive mode
-    print(Fore.CYAN + Style.BRIGHT + "FortifyPass-Validator v0.2.0 (zxcvbn powered)")
+    print(Fore.CYAN + Style.BRIGHT + "FortifyPass version 0.2.1")
     print(Fore.CYAN + "Type .exit() to quit\n")
 
     while True:
@@ -39,12 +39,15 @@ def main():
         result = validator.evaluate(pwd)
 
         # Validation output
-        if result["valid"]:
-            print(Fore.GREEN + Style.BRIGHT + "✓ Valid password")
-        else:
-            print(Fore.RED + Style.BRIGHT + "✗ Invalid password")
+        if not result["policy_passed"]:
+            print(Fore.RED + Style.BRIGHT + "✗ Does not meet policy requirements")
             for err in result["errors"]:
                 print(Fore.RED + Style.BRIGHT + f"  • {err}")
+
+        if result["strength_passed"]:
+            print(Fore.GREEN + Style.BRIGHT + "✓ Strong against common attacks")
+        else:
+            print(Fore.RED + Style.BRIGHT + "✗ Too weak against common attacks")
 
         # Strength output
         score_color = {
@@ -55,11 +58,16 @@ def main():
             4: Fore.GREEN + Style.BRIGHT,
         }[result["score"]]
 
-        print(f"\n{score_color }Strength: {result['label']}")
-        for msg in result["feedback"]:
-            print(Fore.YELLOW + f"  • {msg}")
+        print(f"\n{score_color }Score: {result['score']}/4")
+        print(f"{score_color}Strength: {result['label']}")
+        
+        if result["feedback"]:
+            print("\nFeedback:")
+            for msg in result["feedback"]:
+                print(Fore.YELLOW + f"  • {msg}")
 
         print()
+        print("-" * 60 + "\n")
 
 if __name__ == "__main__":
     main()

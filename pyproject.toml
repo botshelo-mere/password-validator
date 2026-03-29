@@ -1,9 +1,9 @@
 [project]
-name = "fortifypass-validator"
-version = "0.2.0"
+name = "fortifypass"
+version = "0.2.1"
 description = "A modern password validation library powered by zxcvbn with policy enforcement and CLI support."
 readme = "README.md"
-license = { text = "MIT" }
+license = { file = "LICENSE" }
 authors = [{ name = "Botshelo Mere" }]
 requires-python = ">=3.9"
 
@@ -24,7 +24,7 @@ classifiers = [
 ]
 
 [project.scripts]
-password-validator = "password_validator.cli:main"
+fortifypass = "fortifypass.cli:main"
 
 [build-system]
 requires = ["setuptools>=65", "wheel"]
@@ -39,9 +39,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/botshelo-mere/password-validator"
-Repository = "https://github.com/botshelo-mere/password-validator"
-Issues = "https://github.com/botshelo-mere/password-validator/issues"
+Homepage = "https://github.com/botshelo-mere/fortifypass"
+Repository = "https://github.com/botshelo-mere/fortifypass"
+Issues = "https://github.com/botshelo-mere/fortifypass/issues"
+License = "https://github.com/botshelo-mere/fortifypass/blob/main/LICENSE.md"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
@@ -59,7 +60,7 @@ markers = [
 
 [tool.coverage.run]
 branch = true
-source = ["password_validator"]
+source = ["fortifypass"]
 
 [tool.coverage.report]
 show_missing = true
