@@ -39,7 +39,6 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/botshelo-mere/fortifypass"
 Repository = "https://github.com/botshelo-mere/fortifypass"
 Issues = "https://github.com/botshelo-mere/fortifypass/issues"
 License = "https://github.com/botshelo-mere/fortifypass/blob/main/LICENSE.md"
