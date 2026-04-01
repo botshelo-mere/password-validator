@@ -86,17 +86,30 @@ class PasswordValidator:
 
         if len(pwd) > self.max_length:
             errors.append(f"Policy requirement: maximum length is {self.max_length}")
+            
+        # Single pass classification
+        has_digit = has_upper = has_lower = has_special = False
+        
+        for c in pwd:
+            if c.isdigit():
+                has_digit = True
+            elif c.isupper():
+                has_upper = True
+            elif c.islower():
+                has_lower = True
+            elif c in self.special_chars:
+                has_special = True
 
-        if self.require_uppercase and not any(c.isupper() for c in pwd):
+        if self.require_uppercase and not has_upper:
             errors.append("Policy requirement: add at least one uppercase letter")
 
-        if self.require_lowercase and not any(c.islower() for c in pwd):
+        if self.require_lowercase and not has_lower:
             errors.append("Policy requirement: add at least one lowercase letter")
 
-        if self.require_digit and not any(c.isdigit() for c in pwd):
+        if self.require_digit and not has_digit:
             errors.append("Policy requirement: add at least one digit")
 
-        if self.require_special and not any(c in self.special_chars for c in pwd):
+        if self.require_special and not has_special:
             errors.append("Policy requirement: add at least one special character")
 
         if any(word in pwd.lower() for word in self.banned_words):
