@@ -1,10 +1,20 @@
 import logging
 from typing import List, Tuple, Dict, Any, Optional
 from zxcvbn import zxcvbn
+import re
 
 logger = logging.getLogger(__name__)
 
 MAX_ZXCVBN_LEN = 72
+SEQUENCES = [
+"abcdefghijklmnopqrstuvwxyz",
+"0123456789",
+]
+
+KEYBOARD_PATTERNS = [
+"qwerty", "asdfgh", "zxcvbn",
+"123456", "654321"
+]
 
 class PasswordValidator:
     def __init__(
@@ -67,7 +77,26 @@ class PasswordValidator:
             require_special=False,
             min_score=2
         )
+        
+    # =====  Pattern Detection =====
+    def _detect_sequence_runs(self, pwd: str) -> bool:  
+        p = pwd.lower()  
+        for seq in SEQUENCES:  
+            for i in range(len(seq) - 2):  
+                for length in range(3, min(6, len(seq) - i + 1)):  
+                    sub = seq[i:i+length]  
+                    if sub in p or sub[::-1] in p:  
+                        return True  
+        return False  
 
+    def _detect_keyboard_patterns(self, pwd: str) -> bool:  
+        pwd_lower = pwd.lower()  
+        return any(pattern in pwd_lower for pattern in KEYBOARD_PATTERNS)  
+
+    def _has_repetition(self, pwd: str) -> bool:
+        # aaa OR abab OR 1212
+        return bool(re.search(r"(..+)\1", pwd) or re.search(r"(.)\1{2,}", pwd))
+    
     # ===== Policy Validation =====
     def validate(self, pwd: str) -> Tuple[bool, List[str]]:
         if not isinstance(pwd, str):
@@ -114,6 +143,15 @@ class PasswordValidator:
 
         if any(word in pwd.lower() for word in self.banned_words):
             errors.append("Policy requirement: contains a banned word")
+        
+        if self._detect_sequence_runs(pwd):  
+            errors.append("Contains sequential pattern")  
+            
+        if self._detect_keyboard_patterns(pwd):  
+            errors.append("Contains keyboard pattern")  
+            
+        if self._has_repetition(pwd):  
+            errors.append("Contains repetition")  
 
         return len(errors) == 0, errors
    
