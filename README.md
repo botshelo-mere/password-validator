@@ -1,5 +1,16 @@
 # FortifyPass - Real-World Password Security for Developers
 
+## Need better password validation in your project?
+
+Most rules either let weak passwords through or frustrate users into abondoning.
+
+Send me a code snippet or repo link of your current signup/auth flow.
+I'll review it async and show specific improvements using `FortifyPass` (written feedback + code suggestions)
+
+Free for the first 5 people this week. Just DM me on X [@botshelo_dev](https://x.com/botshelo_dev) or reply here.
+
+---
+
 [![PyPI version](https://img.shields.io/badge/pypi-v0.2.1-blue.svg)](https://pypi.org/project/fortifypass/)
 [![Python Version](https://img.shields.io/badge/python-3.9+-blue.svg)](https://python.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE.md)
